@@ -383,6 +383,24 @@ static int is_expired(time_t now, struct crec *crecp)
   return 1;
 }
 
+/* Remove entries with a given UID from the cache */
+unsigned int cache_remove_uid(const unsigned int uid)
+{
+  int i;
+  unsigned int removed = 0;
+  struct crec *crecp;
+
+  for (i = 0; i < hash_size; i++)
+    for (crecp = hash_table[i]; crecp; crecp = crecp->hash_next)
+      if (crecp->uid == uid)
+	{
+	  cache_unlink(crecp);
+	  cache_free(crecp);
+	  removed++;
+	}
+  return removed;
+}
+
 static struct crec *cache_scan_free(char *name, union all_addr *addr, unsigned short class, time_t now,
 				    unsigned int flags, struct crec **target_crec, unsigned int *target_uid)
 {

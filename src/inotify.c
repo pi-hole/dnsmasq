@@ -302,6 +302,10 @@ int inotify_check(time_t now)
 			    continue;
 			  }
 
+			const unsigned int removed = cache_remove_uid(ah->index);
+			if(removed > 0)
+			  my_syslog(LOG_INFO, _("flushed %u outdated entries"), removed);
+
 			read_hostsfile(path, ah->index, 0, NULL, 0);
 #ifdef HAVE_DHCP
 			if (daemon->dhcp || daemon->doing_dhcp6) 
