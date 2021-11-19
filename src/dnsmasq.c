@@ -949,8 +949,6 @@ int main (int argc, char **argv)
 
   if (option_bool(OPT_NOWILD))
     warn_bound_listeners();
-  else if (!option_bool(OPT_CLEVERBIND))
-    warn_wild_labels();
 
   warn_int_names();
   

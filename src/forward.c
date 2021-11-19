@@ -1497,12 +1497,18 @@ void receive_query(struct listener *listen, time_t now)
       if (!indextoname(listen->fd, if_index, ifr.ifr_name))
 	return;
       
-      if (!iface_check(family, &dst_addr, ifr.ifr_name, &auth_dns))
+      if (!option_bool(OPT_CLEVERBIND))
+	enumerate_interfaces(0);
+      /* interface=eth0   and query over eth0   -> ifchk = 1, label = 1 - ACCEPTED */
+      /* interface=eth0   and query over eth0:0 -> ifchk = 1, label = 0 - REJECTED */
+      /* interface=eth0:0 and query over eth0:0 -> ifchk = 0, label = 1 - ACCEPTED */
+      /* interface=eth0:0 and query over eth0:0 -> ifchk = 0, label = 0 - REJECTED */
+      /* If the interace is not IPv4, label_match return 2 and we use iface_check */
+      const int label = label_match(if_index, family, &dst_addr);
+      const int ifchk = iface_check(family, &dst_addr, ifr.ifr_name, &auth_dns);
+      if (label == 0 || (label == 2 && !ifchk))
 	{
-	   if (!option_bool(OPT_CLEVERBIND))
-	     enumerate_interfaces(0); 
-	   if (!loopback_exception(listen->fd, family, &dst_addr, ifr.ifr_name) &&
-	       !label_exception(if_index, family, &dst_addr))
+	   if (!loopback_exception(listen->fd, family, &dst_addr, ifr.ifr_name))
 	     return;
 	}
 

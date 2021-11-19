@@ -207,13 +207,13 @@ int loopback_exception(int fd, int family, union all_addr *addr, char *name)
    on the relevant address, but the name of the arrival interface, derived from the
    index won't match the config. Check that we found an interface address for the arrival 
    interface: daemon->interfaces must be up-to-date. */
-int label_exception(int index, int family, union all_addr *addr)
+int label_match(int index, int family, union all_addr *addr)
 {
   struct irec *iface;
 
   /* labels only supported on IPv4 addresses. */
   if (family != AF_INET)
-    return 0;
+    return 2;
 
   for (iface = daemon->interfaces; iface; iface = iface->next)
     if (iface->index == index && iface->addr.sa.sa_family == AF_INET &&
@@ -1213,15 +1213,6 @@ void warn_bound_listeners(void)
   
   if (advice)
     my_syslog(LOG_WARNING, _("LOUD WARNING: use --bind-dynamic rather than --bind-interfaces to avoid DNS amplification attacks via these interface(s)")); 
-}
-
-void warn_wild_labels(void)
-{
-  struct irec *iface;
-
-  for (iface = daemon->interfaces; iface; iface = iface->next)
-    if (iface->found && iface->name && iface->label)
-      my_syslog(LOG_WARNING, _("warning: using interface %s instead"), iface->name);
 }
 
 void warn_int_names(void)
