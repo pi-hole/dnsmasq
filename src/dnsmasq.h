@@ -1264,6 +1264,7 @@ extern struct daemon {
   /* file for packet dumps. */
   int dumpfd;
 #endif
+  in_port_t log_port;
 } *daemon;
 
 /* cache.c */

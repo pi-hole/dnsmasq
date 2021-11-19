@@ -5405,7 +5405,9 @@ void read_opts(int argc, char **argv, char *compile_opts)
   daemon = opt_malloc(sizeof(struct daemon));
   memset(daemon, 0, sizeof(struct daemon));
   daemon->namebuff = buff;
-  daemon->addrbuff = safe_malloc(ADDRSTRLEN);
+  /* Space for IP address plus port (used when logging 
+     upstream server forwarding) */
+  daemon->addrbuff = safe_malloc(ADDRSTRLEN + 10);
   
   /* Set defaults - everything else is zero or NULL */
   daemon->cachesize = CACHESIZ;
