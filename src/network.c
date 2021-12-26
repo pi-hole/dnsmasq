@@ -506,7 +506,7 @@ static int iface_allowed(struct iface_param *param, int if_index, char *label,
     }
   else
     for (tmp = daemon->dhcp_except; tmp; tmp = tmp->next)
-      if (tmp->name && wildcard_match(tmp->name, ifr.ifr_name))
+      if (tmp->name && wildcard_match(tmp->name, label))
 	{
 	  tftp_ok = 0;
 	  dhcp_ok = 0;
@@ -520,7 +520,7 @@ static int iface_allowed(struct iface_param *param, int if_index, char *label,
       /* dedicated tftp interface list */
       tftp_ok = 0;
       for (tmp = daemon->tftp_interfaces; tmp; tmp = tmp->next)
-	if (tmp->name && wildcard_match(tmp->name, ifr.ifr_name))
+	if (tmp->name && wildcard_match(tmp->name, label))
 	  tftp_ok = 1;
     }
 #endif
