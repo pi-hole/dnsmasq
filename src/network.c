@@ -544,9 +544,11 @@ static int iface_allowed(struct iface_param *param, int if_index, char *label,
       iface->done = iface->multicast_done = iface->warned = 0;
       iface->index = if_index;
       iface->label = is_label;
-      if ((iface->name = whine_malloc(strlen(ifr.ifr_name)+1)))
+      if ((iface->slabel = whine_malloc(strlen(label)+1)) &&
+          (iface->name = whine_malloc(strlen(ifr.ifr_name)+1)))
 	{
 	  strcpy(iface->name, ifr.ifr_name);
+	  strcpy(iface->slabel, label);
 	  iface->next = daemon->interfaces;
 	  daemon->interfaces = iface;
 	  return 1;
@@ -1221,7 +1223,7 @@ void warn_wild_labels(void)
 
   for (iface = daemon->interfaces; iface; iface = iface->next)
     if (iface->found && iface->name && iface->label)
-      my_syslog(LOG_WARNING, _("warning: using interface %s instead"), iface->name);
+      my_syslog(LOG_WARNING, _("warning: using interface %s instead of %s"), iface->name, iface->slabel);
 }
 
 void warn_int_names(void)
