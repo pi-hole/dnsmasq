@@ -1423,7 +1423,12 @@ void receive_query(struct listener *listen, time_t now)
 	  static int warned = 0;
 	  if (!warned)
 	    {
-	      my_syslog(LOG_WARNING, _("Ignoring query from non-local network"));
+	      char addrstr[INET6_ADDRSTRLEN];
+	      if(family == AF_INET6)
+		inet_ntop(AF_INET6, &source_addr.in6.sin6_addr, addrstr, sizeof(addrstr));
+	      else
+		inet_ntop(AF_INET, &source_addr.in.sin_addr, addrstr, sizeof(addrstr));
+	      my_syslog(LOG_WARNING, _("Ignoring UDP query from non-local network %s (logged only once)"), addrstr);
 	      warned = 1;
 	    }
 	  return;
@@ -1950,7 +1955,12 @@ unsigned char *tcp_request(int confd, time_t now,
 	}
       if (!addr)
 	{
-	  my_syslog(LOG_WARNING, _("Ignoring query from non-local network"));
+	  char addrstr[INET6_ADDRSTRLEN];
+	  if(peer_addr.sa.sa_family == AF_INET6)
+	    inet_ntop(AF_INET6, &peer_addr.in6.sin6_addr, addrstr, sizeof(addrstr));
+	  else
+	    inet_ntop(AF_INET, &peer_addr.in.sin_addr, addrstr, sizeof(addrstr));
+	  my_syslog(LOG_WARNING, _("Ignoring TCP query from non-local network %s"), addrstr);
 	  return packet;
 	}
     }
