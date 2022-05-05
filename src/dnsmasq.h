@@ -684,10 +684,17 @@ struct hostsfile {
   struct hostsfile *next;
   int flags;
   char *fname;
+  unsigned int index; /* matches to cache entries for logging */
+};
+
+struct dyndir {
+  struct dyndir *next;
+  struct hostsfile *files;
+  int flags;
+  char *dname;
 #ifdef HAVE_INOTIFY
   int wd; /* inotify watch descriptor */
 #endif
-  unsigned int index; /* matches to cache entries for logging */
 };
 
 /* packet-dump flags */
@@ -1145,6 +1152,7 @@ extern struct daemon {
   u32 umbrella_org;
   u32 umbrella_asset;
   u8 umbrella_device[8];
+  int host_index;
   struct hostsfile *addn_hosts;
   struct dhcp_context *dhcp, *dhcp6;
   struct ra_interface *ra_interfaces;
@@ -1165,7 +1173,8 @@ extern struct daemon {
   int doing_ra, doing_dhcp6;
   struct dhcp_netid_list *dhcp_ignore, *dhcp_ignore_names, *dhcp_gen_names; 
   struct dhcp_netid_list *force_broadcast, *bootp_dynamic;
-  struct hostsfile *dhcp_hosts_file, *dhcp_opts_file, *dynamic_dirs;
+  struct hostsfile *dhcp_hosts_file, *dhcp_opts_file;
+  struct dyndir *dynamic_dirs;
   int dhcp_max, tftp_max, tftp_mtu;
   int dhcp_server_port, dhcp_client_port;
   int start_tftp_port, end_tftp_port; 
@@ -1287,6 +1296,7 @@ struct crec *cache_find_by_name(struct crec *crecp,
 				char *name, time_t now, unsigned int prot);
 void cache_end_insert(void);
 void cache_start_insert(void);
+unsigned int cache_remove_uid(const unsigned int uid);
 int cache_recv_insert(time_t now, int fd);
 struct crec *cache_insert(char *name, union all_addr *addr, unsigned short class, 
 			  time_t now, unsigned long ttl, unsigned int flags);

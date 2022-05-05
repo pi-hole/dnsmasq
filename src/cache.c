@@ -383,6 +383,24 @@ static int is_expired(time_t now, struct crec *crecp)
   return 1;
 }
 
+/* Remove entries with a given UID from the cache */
+unsigned int cache_remove_uid(const unsigned int uid)
+{
+  int i;
+  unsigned int removed = 0;
+  struct crec *crecp;
+
+  for (i = 0; i < hash_size; i++)
+    for (crecp = hash_table[i]; crecp; crecp = crecp->hash_next)
+      if (crecp->uid == uid)
+	{
+	  cache_unlink(crecp);
+	  cache_free(crecp);
+	  removed++;
+	}
+  return removed;
+}
+
 static struct crec *cache_scan_free(char *name, union all_addr *addr, unsigned short class, time_t now,
 				    unsigned int flags, struct crec **target_crec, unsigned int *target_uid)
 {
@@ -1018,16 +1036,17 @@ struct crec *cache_find_by_addr(struct crec *crecp, union all_addr *addr,
 static void add_hosts_entry(struct crec *cache, union all_addr *addr, int addrlen, 
 			    unsigned int index, struct crec **rhash, int hashsz)
 {
-  struct crec *lookup = cache_find_by_name(NULL, cache_get_name(cache), 0, cache->flags & (F_IPV4 | F_IPV6));
   int i;
   unsigned int j; 
+  struct crec *lookup = NULL;
 
   /* Remove duplicates in hosts files. */
-  if (lookup && (lookup->flags & F_HOSTS) && memcmp(&lookup->addr, addr, addrlen) == 0)
-    {
-      free(cache);
-      return;
-    }
+  while((lookup = cache_find_by_name(lookup, cache_get_name(cache), 0, cache->flags & (F_IPV4 | F_IPV6))))
+    if (lookup && (lookup->flags & F_HOSTS) && memcmp(&lookup->addr, addr, addrlen) == 0)
+      {
+	free(cache);
+	return;
+      }
     
   /* Ensure there is only one address -> name mapping (first one trumps) 
      We do this by steam here, The entries are kept in hash chains, linked
@@ -1845,6 +1864,7 @@ void dump_cache(time_t now)
 char *record_source(unsigned int index)
 {
   struct hostsfile *ah;
+  struct dyndir *dd;
 
   if (index == SRC_CONFIG)
     return "config";
@@ -1856,9 +1876,11 @@ char *record_source(unsigned int index)
       return ah->fname;
 
 #ifdef HAVE_INOTIFY
-  for (ah = daemon->dynamic_dirs; ah; ah = ah->next)
-     if (ah->index == index)
-       return ah->fname;
+  /* Dynamic directories contain multiple files */
+  for (dd = daemon->dynamic_dirs; dd; dd = dd->next)
+    for (ah = dd->files; ah; ah = ah->next)
+      if (ah->index == index)
+	return ah->fname;
 #endif
 
   return "<unknown>";
