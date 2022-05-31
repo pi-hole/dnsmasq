@@ -512,6 +512,10 @@ The query-port flag is ignored for any servers which have a
 source address specified but the port may be specified directly as
 part of the source address. Forcing queries to an interface is not
 implemented on all platforms supported by dnsmasq.
+
+If dnsmasq is compiled with HAVE_RESOLVESERVER, the upstream server may be specified with a hostname
+rather than an IP address. In this case, dnsmasq will try to use the system resolver to get the IP
+address of a server during startup. If name resolution fails, starting dnsmasq fails.
 .TP
 .B --rev-server=<ip-address>[/<prefix-len>][,<ipaddr>][#<port>][@<interface>][@<source-ip>[#<port>]]
 This is functionally the same as 

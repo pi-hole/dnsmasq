@@ -138,6 +138,9 @@ HAVE_LOOP
 HAVE_INOTIFY
    use the Linux inotify facility to efficiently re-read configuration files.
 
+HAVE_RESOLVESERVER
+   lookup servers if specified via hostnames instead of IP addresses.
+
 NO_ID
    Don't report *.bind CHAOS info to clients, forward such requests upstream instead.
 NO_TFTP

@@ -19,6 +19,10 @@
 #include "dnsmasq.h"
 #include <setjmp.h>
 
+#ifdef HAVE_RESOLVESERVER
+#include <netdb.h>
+#endif
+
 static volatile int mem_recover = 0;
 static jmp_buf mem_jmp;
 static int one_file(char *file, int hard_opt);
@@ -850,6 +854,11 @@ char *parse_server(char *arg, union mysockaddr *addr, union mysockaddr *source_a
   char *interface_opt = NULL;
   int scope_index = 0;
   char *scope_id;
+  int addr_type = 0;
+#ifdef HAVE_RESOLVESERVER
+  int ecode = 0;
+  struct addrinfo *hostinfo, hints = { 0 };
+#endif
 
   *interface = 0;
 
@@ -886,6 +895,64 @@ char *parse_server(char *arg, union mysockaddr *addr, union mysockaddr *source_a
   }
 
   if (inet_pton(AF_INET, arg, &addr->in.sin_addr) > 0)
+      addr_type = AF_INET;
+  else if (inet_pton(AF_INET6, arg, &addr->in6.sin6_addr) > 0)
+      addr_type = AF_INET6;
+#ifdef HAVE_RESOLVESERVER
+  /* if the argument is neither an IPv4 not an IPv6 address, it might be a
+     hostname and we should try to resolve it to a suitable address */
+  else
+    {
+      memset(&hints, 0, sizeof(hints));
+      /* The AI_ADDRCONFIG flag ensures that then IPv4 addresses are returned in
+         the result only if the local system has at least one IPv4 address
+         configured, and IPv6 addresses are returned only if the local system
+         has at least one IPv6 address configured. The loopback address is not
+         considered for this case as valid as a configured address. This flag is
+         useful on, for example, IPv4-only systems, to ensure that getaddrinfo()
+         does not return IPv6 socket addresses that would always fail in
+         subsequent connect() or bind() attempts. */
+      hints.ai_flags = AI_ADDRCONFIG;
+#if defined(HAVE_IDN) && defined(AI_IDN)
+      /* If the AI_IDN flag is specified and we have glibc 2.3.4 or newer, then
+         the node name given in node is converted to IDN format if necessary.
+         The source encoding is that of the current locale. */
+      hints.ai_flags |= AI_IDN;
+#endif
+      /* The value AF_UNSPEC indicates that getaddrinfo() should return socket
+         addresses for any address family (either IPv4 or IPv6, for example)
+         that can be used with node <arg> and service "domain". */
+      hints.ai_family = AF_UNSPEC;
+
+      /* Get address associated with this hostname */
+      ecode = getaddrinfo(arg, "domain", &hints, &hostinfo);
+      if (ecode == 0)
+      {
+        /* The getaddrinfo() function allocated and initialized a linked list of
+           addrinfo structures, one for each network address that matches node
+           and service, subject to the restrictions imposed by our <hints>
+           above, and returns a pointer to the start of the list in <hostinfo>.
+           The items in the linked list are linked by the <ai_next> field. For
+           simplicity, we only look at the first returned address here. */
+	addr_type = hostinfo->ai_family;
+	if(addr_type == AF_INET)
+	  memcpy(&addr->in.sin_addr, &((struct sockaddr_in *) hostinfo->ai_addr)->sin_addr, sizeof(addr->in.sin_addr));
+	else if(addr_type == AF_INET6)
+	  memcpy(&addr->in6.sin6_addr, &((struct sockaddr_in6 *) hostinfo->ai_addr)->sin6_addr, sizeof(addr->in6.sin6_addr));
+	freeaddrinfo(hostinfo);
+      }
+      else
+      {
+	/* Lookup failed, return human readable error string */
+	if (ecode == EAI_AGAIN)
+	  return (char*)"Cannot resolve server name";
+	else
+	  return (char*)gai_strerror(ecode);
+      }
+    }
+#endif
+
+    if (addr_type == AF_INET)
     {
       addr->in.sin_port = htons(serv_port);	
       addr->sa.sa_family = source_addr->sa.sa_family = AF_INET;
@@ -914,7 +981,7 @@ char *parse_server(char *arg, union mysockaddr *addr, union mysockaddr *source_a
 	    }
 	}
     }
-  else if (inet_pton(AF_INET6, arg, &addr->in6.sin6_addr) > 0)
+  else if (addr_type == AF_INET6)
     {
       if (scope_id && (scope_index = if_nametoindex(scope_id)) == 0)
 	return _("bad interface name");
