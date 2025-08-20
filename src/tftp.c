@@ -215,13 +215,14 @@ static void tftp_request(struct listener *listen, time_t now)
 	}
       else
 	{
+	  if (!option_bool(OPT_CLEVERBIND))
+	    enumerate_interfaces(0);
 	  /* Do the same as DHCP */
-	  if (!iface_check(family, &addra, name, NULL))
+	  const int label = label_match(if_index, family, &addra);
+	  const int ifchk = iface_check(family, &addra, name, NULL);
+	  if (!label || (label == 2 && ifchk))
 	    {
-	      if (!option_bool(OPT_CLEVERBIND))
-		enumerate_interfaces(0); 
-	      if (!loopback_exception(listen->tftpfd, family, &addra, name) &&
-		  !label_exception(if_index, family, &addra))
+	      if (!loopback_exception(listen->tftpfd, family, &addra, name))
 		return;
 	    }
 	  
