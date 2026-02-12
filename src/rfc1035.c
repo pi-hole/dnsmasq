@@ -106,11 +106,16 @@ int extract_name(struct dns_header *header, size_t plen, unsigned char **pp,
 	  
 	  p = l + (unsigned char *)header;
 	}
-      else if (label_type == 0x00)
-	{ /* label_type = 0 -> label. */
-	  namelen += l + 1; /* include period */
+      else if (label_type == 0x00) /* label_type = 0 -> label. */
+	{
+	  /* reject wire-format names > MAXDNAME bytes
+	     This also ensures that internal-format
+	     names don't exceed MAXDNAMESTR characters. */
+	  namelen += l + 1; 
+	  /* namelen == MAXDNAME means terminator will overflow. */
 	  if (namelen >= MAXDNAME)
 	    return 0;
+
 	  if (!CHECK_LEN(header, p, plen, l))
 	    return 0;
 	  
@@ -119,13 +124,13 @@ int extract_name(struct dns_header *header, size_t plen, unsigned char **pp,
 	      {
 		unsigned char c = *p;
 
-		if (c == 0 || c == '.' || c == NAME_ESCAPE)
+		if (IS_NAME_ESCAPE(c))
 		  {
 		    *cp++ = NAME_ESCAPE;
 		    *cp++ = c+1;
 		  }
 		else
-		  *cp++ = c; 
+		  *cp++ = c;
 	      }
 	    else if (flip)
 	      {
@@ -1463,7 +1468,7 @@ int add_resource_record(struct dns_header *header, char *limit, int *truncp, int
   else
     {
       char *name = va_arg(ap, char *);
-      if (name && !(p = do_rfc1035_name(p, name, limit)))
+      if (name && !(p = do_rfc1035_name(p, name, (unsigned char *)limit)))
 	goto truncated;
       
       if (nameoffset < 0)
@@ -1527,7 +1532,7 @@ int add_resource_record(struct dns_header *header, char *limit, int *truncp, int
         /* get domain-name answer arg and store it in RDATA field */
         if (offset)
           *offset = p - (unsigned char *)header;
-        if (!(p = do_rfc1035_name(p, va_arg(ap, char *), limit)))
+        if (!(p = do_rfc1035_name(p, va_arg(ap, char *), (unsigned char *)limit)))
 	  goto truncated;
 	CHECK_LIMIT(1);
         *p++ = 0;

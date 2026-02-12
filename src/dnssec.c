@@ -144,7 +144,7 @@ static int is_check_date(unsigned long curtime)
    Init state->ip with the RR, and state->end with the end of same.
    Init state->op to NULL.
    Init state->desc to RR descriptor.
-   Init state->buff with a MAXDNAME * 2 buffer.
+   Init state->buff with a MAXDNAMESTR+1 buffer.
    
    After each call which returns 1, state->op points to the next byte of data.
    On returning 0, the end has been reached.

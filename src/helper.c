@@ -253,7 +253,7 @@ int create_helper(int event_fd, int err_fd, uid_t uid, gid_t gid, long max_fd)
 	}
       
       /* supplied data may just exceed normal buffer (unlikely) */
-      if ((data.hostname_len + data.ed_len + data.clid_len) > MAXDNAME && 
+      if ((data.hostname_len + data.ed_len + data.clid_len) > MAXDNAMESTR && 
 	  !(alloc_buff = buf = malloc(data.hostname_len + data.ed_len + data.clid_len)))
 	continue;
       
