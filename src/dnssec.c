@@ -656,7 +656,7 @@ static int validate_rrset(time_t now, struct dns_header *header, size_t plen, in
 	    }
 	}
      
-      hash->digest(ctx, hash->digest_size, digest);
+      nettle_digest_wrapper(hash, ctx, hash->digest_size, digest);
       
       /* namebuff used for workspace above, restore to leave unchanged on exit */
       p = (unsigned char*)(rrset[0]);
