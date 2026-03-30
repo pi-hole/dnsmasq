@@ -2047,8 +2047,8 @@ static void log6_opts(int nest, unsigned int xid, void *start_opts, void *end_op
 	    {
 	      int slen = opt6_len(opt) - 2;
 	      int len = sprintf(daemon->namebuff, "%u ", opt6_uint(opt, 0, 2));
-	      if (slen > (MAXDNAME * 2) - len - 1)
-		slen = (MAXDNAME * 2) - len - 1;
+	      if (slen > (MAXDNAMESTR) - len - 1)
+		slen = (MAXDNAMESTR) - len - 1;
 	      memcpy(daemon->namebuff + len, opt6_ptr(opt, 2), slen);
 	      daemon->namebuff[len + slen] = 0;
 	    }
