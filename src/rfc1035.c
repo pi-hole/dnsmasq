@@ -953,7 +953,8 @@ int extract_addresses(struct dns_header *header, size_t qlen, char *name, time_t
 			      /* Name, extract it then re-encode. */
 			      int len;
 			      
-			      if (!extract_name(header, qlen, &p1, name, EXTR_NAME_EXTRACT, 0))
+			      /* rdlen may lie, and extract_name() advances p1 past where it says the record ends. */
+			      if (!extract_name(header, qlen, &p1, name, EXTR_NAME_EXTRACT, 0) || (p1 > endrr))
 				{
 				  blockdata_free(addr.rrblock.rrdata);
 				  return 2;
