@@ -1320,15 +1320,15 @@ static int prove_non_existence_nsec(struct dns_header *header, size_t plen, unsi
 	      if (rdlen < 2 || rdlen < p[1] + 2)
 		return DNSSEC_FAIL_BADPACKET;
 	      
+	      /* If we can prove that there's no NS record, return that information. */
+	      if (nons && check_type_bitmap(p, T_NS))
+		*nons = 0;
+	      
 	      /* NSEC with the same name as the RR we're testing, check
 		 that the type in question doesn't appear in the type map */
 	      if (check_type_bitmap(p, type))
 		return DNSSEC_FAIL_NONSEC;
 
-	      /* If we can prove that there's no NS record, return that information. */
-	      if (nons && check_type_bitmap(p, T_NS))
-		*nons = 0;
-	      
 	      /* A CNAME answer would also be valid, so if there's a CNAME it should 
 		 have been returned. */
 	      if (check_type_bitmap(p, T_CNAME))
@@ -1337,7 +1337,7 @@ static int prove_non_existence_nsec(struct dns_header *header, size_t plen, unsi
 	      /* If the SOA bit is set for a DS record, then we have the
 		 DS from the wrong side of the delegation. For the root DS, 
 		 this is expected. */
-	      if (name_labels != 0 && check_type_bitmap(p, T_DS))
+	      if (name_labels != 0 && type == T_DS && check_type_bitmap(p, T_SOA))
 		return DNSSEC_FAIL_NONSEC;
 	      
 	      /* RFC 6672 5.3.4.1. */
@@ -1433,6 +1433,7 @@ static int base32_decode(char *in, unsigned char *out)
   return p - out;
 }
 
+/* return 1 if we can prove record _doesn't_ exist */
 static int check_nsec3_coverage(struct dns_header *header, size_t plen, int digest_len, unsigned char *digest, int type,
 				char *workspace1, char *workspace2, unsigned char **nsecs, int nsec_count, int *nons, int name_labels)
 {
@@ -1477,23 +1478,23 @@ static int check_nsec3_coverage(struct dns_header *header, size_t plen, int dige
 		    if (rdlen < 2 || rdlen < p[1] + 2)
 		      return 0;
 	      
+		    /* If we can prove that there's no NS record, return that information. */
+		    if (nons && check_type_bitmap(p, T_NS))
+		      *nons = 0;
+
 		    /* Does the NSEC3 say our type exists? */
 		    if (check_type_bitmap(p, type))
 		      return 0;
 
-		    /* If we can prove that there's no NS record, return that information. */
-		    if (nons && check_type_bitmap(p, T_NS))
-		      *nons = 0;
-	      
 		    /* A CNAME answer would also be valid, so if there's a CNAME it should 
 		       have been returned. */
 		    if (check_type_bitmap(p, T_CNAME))
-		      return DNSSEC_FAIL_NONSEC;
+		      return 0;
 		  
 		    /* If the SOA bit is set for a DS record, then we have the
 		       DS from the wrong side of the delegation. For the root DS, 
 		       this is expected. */
-		    if (name_labels != 0 && check_type_bitmap(p, T_DS))
+		    if (name_labels != 0 && type == T_DS && check_type_bitmap(p, T_SOA))
 		      return 0;
 	      
 		    rdlen -= p[1] + 2;
