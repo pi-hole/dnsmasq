@@ -394,6 +394,7 @@ void from_wire(char *name)
 	  if (IS_NAME_ESCAPE(c))
 	    {
 	      memmove(p+1, p, 1 + last - p);
+	      last++;
 	      len++;
 	      *p++ = NAME_ESCAPE; 
 	      (*p)++;
