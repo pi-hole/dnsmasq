@@ -1027,3 +1027,53 @@ void free_real(const char *func, unsigned int line, void *ptr)
       free(ptr);
     }
 }
+
+/* get lines from f, expand buffer as required. Buffer is freed when
+   EOF reached and we return zero. */
+int get_line_alloc(FILE *f, char **buffp, size_t *sizep)
+{
+  char c;
+  size_t cnt = 0;
+  char *buff = *buffp;
+  
+  while (1) {
+    c = getc(f);
+
+    if (cnt == *sizep)
+      {
+	void *new;
+	
+	if ((new = whine_realloc(*buffp, cnt + 1024)))
+	  {
+	    buff = *buffp = new;
+	    *sizep = cnt + 1024; 
+	  }
+	else
+	  {
+	    /* allocation failed, ignore line. Whine_realloc will have complained. */
+	    while (c != '\n' && c != EOF) 
+	      c = getc(f);
+	    
+	    cnt = 0;
+	    continue;
+	  }
+      }
+
+    buff[cnt] = 0;
+
+    if (c == '\n')
+      return 1;
+    
+    if (c == EOF) /* handle last line with no '\n' */
+      {
+	/* handle last line without '\n' */
+	if (cnt != 0)
+	  return 1;
+
+	free(buff);
+	return 0;
+      }
+	
+    buff[cnt++] = c;
+  }
+}

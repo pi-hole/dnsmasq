@@ -1407,9 +1407,10 @@ static int eatspace(FILE *f)
     }
 }
 	 
-static int gettok(FILE *f, char *token)
+static int gettok(FILE *f, char *token, size_t buffsz)
 {
-  int c, count = 0;
+  int c;
+  unsigned int count = 0;
  
   while (1)
     {
@@ -1422,7 +1423,7 @@ static int gettok(FILE *f, char *token)
 	  return eatspace(f);
 	}
       
-      if (count < (MAXDNAMESTR - 1))
+      if (count < (buffsz - 1))
 	{
 	  token[count++] = c;
 	  token[count] = 0;
@@ -1447,7 +1448,7 @@ int read_hostsfile(char *filename, unsigned int index, int cache_size, struct cr
   
   lineno += eatspace(f);
   
-  while ((atnl = gettok(f, token)) != -1)
+  while ((atnl = gettok(f, token, MAXDNAMESTR)) != -1)
     {
       if (inet_pton(AF_INET, token, &addr) > 0)
 	{
@@ -1465,7 +1466,7 @@ int read_hostsfile(char *filename, unsigned int index, int cache_size, struct cr
 	{
 	  my_syslog(LOG_ERR, _("bad address at %s line %d"), filename, lineno); 
 	  while (atnl == 0)
-	    atnl = gettok(f, token);
+	    atnl = gettok(f, token, MAXDNAMESTR);
 	  lineno += atnl;
 	  continue;
 	}
@@ -1483,7 +1484,7 @@ int read_hostsfile(char *filename, unsigned int index, int cache_size, struct cr
 	  int fqdn, nomem;
 	  char *canon;
 	  
-	  if ((atnl = gettok(f, token)) == -1)
+	  if ((atnl = gettok(f, token, MAXDNAMESTR)) == -1)
 	    break;
 
 	  fqdn = !!strchr(token, '.');

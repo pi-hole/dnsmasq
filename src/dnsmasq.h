@@ -1516,6 +1516,7 @@ void *whine_malloc_real(const char *func, unsigned int line, size_t size);
 void *whine_realloc_real(const char *wrapper, const char *func, unsigned int line, void *ptr, size_t size);
 int expand_buf_real(const char *func, unsigned int line, struct iovec *iov, size_t size);
 int expand_workspace_real(const char *func, unsigned int line, unsigned char ***wkspc, int *szp, int new);
+int get_line_alloc(FILE *f, char **buffp, size_t *sizep);
 int sa_len(union mysockaddr *addr);
 int sockaddr_isequal(const union mysockaddr *s1, const union mysockaddr *s2);
 int sockaddr_isnull(const union mysockaddr *s);
