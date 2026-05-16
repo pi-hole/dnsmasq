@@ -1046,14 +1046,15 @@ int get_line_alloc(FILE *f, char **buffp, size_t *sizep)
       {
 	void *new;
 	
-	if ((new = whine_realloc(*buffp, cnt + 1024)))
+	if ((new = whine_realloc(buff, cnt + 1024)))
 	  {
 	    buff = *buffp = new;
 	    *sizep = cnt + 1024; 
 	  }
 	else
 	  {
-	    /* allocation failed, ignore line. Whine_realloc will have complained. */
+	    /* allocation failed, ignore line.
+	       Whine_realloc will have complained. */
 	    while (c != '\n' && c != EOF) 
 	      c = getc(f);
 	    
@@ -1067,7 +1068,7 @@ int get_line_alloc(FILE *f, char **buffp, size_t *sizep)
     if (c == '\n')
       return 1;
     
-    if (c == EOF) /* handle last line with no '\n' */
+    if (c == EOF)
       {
 	/* handle last line without '\n' */
 	if (cnt != 0)
