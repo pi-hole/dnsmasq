@@ -439,10 +439,14 @@ int hostname_issubdomain(char *a, char *b)
   for (ap = a; *ap; ap++); 
   for (bp = b; *bp; bp++);
 
-  /* a shorter than b */
-  if ((ap - a) < (bp - b))
+  /* anything is a subdomain of the root domain. */
+  if (ap == a)
+    return (bp == b) ? 2 : 1;
+  
+  /* b shorter than a */
+  if ((bp - b) < (ap - a))
     return 0;
-
+  
   do
     {
       c1 = (unsigned char) *(--ap);
@@ -455,18 +459,17 @@ int hostname_issubdomain(char *a, char *b)
 
        if (c1 != c2)
 	 return 0;
-    } while (bp != b);
+    } while (ap != a);
 
-  if (ap == a)
+  if (bp == b)
     return 2;
 
-  if (*(--ap) == '.')
+  if (*(--bp) == '.')
     return 1;
 
   return 0;
 }
  
-  
 time_t dnsmasq_time(void)
 {
 #ifdef HAVE_BROKEN_RTC

@@ -383,7 +383,7 @@ static int explore_rrset(struct dns_header *header, size_t plen, int class, int 
 		     an attacker using signatures made with the key of an unrelated 
 		     zone he controls. Note that the root key is always allowed.
 		     Ignore sigs which aren't valid */
-		  if (*daemon->workspacename == 0 || hostname_issubdomain(name, daemon->workspacename) != 0)
+		  if (*daemon->workspacename == 0 || hostname_issubdomain(daemon->workspacename, name) != 0)
 		    {
 		      if (gotkey)
 			{
@@ -2095,8 +2095,8 @@ int dnssec_validate_reply(time_t now, struct dns_header *header, size_t plen, ch
 		       CNAME must be <subdomain>.<dname>
 		       CNAME target must be <subdomain>.<dname_target>
 		       <subdomain>s must match for name and target. */ 
-		    if (hostname_issubdomain(daemon->cname, name) == 1 &&
-			hostname_issubdomain(daemon->workspacename, keyname) == 1 &&
+		    if (hostname_issubdomain(name, daemon->cname) == 1 &&
+			hostname_issubdomain(keyname, daemon->workspacename) == 1 &&
 			name_prefix_len == strlen(daemon->workspacename) - strlen(keyname))
 		      {
 			char save = daemon->cname[name_prefix_len];
