@@ -589,7 +589,7 @@ static void forward_query(int udpfd, union mysockaddr *udpaddr,
  reply:
   if (udpfd != -1)
     {
-      if (!(plen = make_local_answer(flags, gotname, plen, header, daemon->namebuff, (char *)(header + replylimit), first, last, ede)))
+      if (!(plen = make_local_answer(flags, gotname, plen, header, daemon->namebuff, replylimit, first, last, ede)))
 	return;
       
       if (fwd_flags & FREC_HAS_PHEADER)
@@ -2731,7 +2731,7 @@ void tcp_request(int confd, time_t now, struct iovec *bigbuff,
       if (m == 0)
 	{
 	  if (!(m = make_local_answer(flags, gotname, size, out_header, daemon->namebuff,
-				      ((char *) out_header) + 65536, first, last, ede)))
+				      65536, first, last, ede)))
 	    break;
 	}
       else if (ede == EDE_UNSET)

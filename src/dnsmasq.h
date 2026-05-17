@@ -1966,7 +1966,7 @@ int lookup_domain(char *qdomain, int flags, int *lowout, int *highout);
 int filter_servers(int seed, int flags, int *lowout, int *highout);
 int is_local_answer(time_t now, int first, char *name);
 size_t make_local_answer(int flags, int gotname, size_t size, struct dns_header *header,
-			 char *name, char *limit, int first, int last, int ede);
+			 char *name, size_t limit, int first, int last, int ede);
 int server_samegroup(struct server *a, struct server *b);
 #ifdef HAVE_DNSSEC
 int dnssec_server(struct server *server, char *keyname, int is_ds, int *firstp, int *lastp);
