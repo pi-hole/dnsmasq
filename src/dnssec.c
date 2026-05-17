@@ -2332,7 +2332,7 @@ int dnskey_keytag(int alg, int flags, unsigned char *key, int keylen)
     }
 }
 
-size_t dnssec_generate_query(struct dns_header *header, unsigned char *end, char *name,
+size_t dnssec_generate_query(struct dns_header *header, size_t outlen, char *name,
 			     int class, int id, int type)
 {
   unsigned char *p;
@@ -2356,7 +2356,7 @@ size_t dnssec_generate_query(struct dns_header *header, unsigned char *end, char
   PUTSHORT(type, p);
   PUTSHORT(class, p);
 
-  return add_do_bit(header, p - (unsigned char *)header, end);
+  return add_do_bit(header, p - (unsigned char *)header, outlen);
 }
 
 int errflags_to_ede(int status)

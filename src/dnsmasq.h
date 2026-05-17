@@ -1468,7 +1468,7 @@ int in_zone(struct auth_zone *zone, char *name, char **cut);
 
 /* dnssec.c */
 #ifdef HAVE_DNSSEC
-size_t dnssec_generate_query(struct dns_header *header, unsigned char *end, char *name, int class, int id, int type);
+size_t dnssec_generate_query(struct dns_header *header, size_t outlen, char *name, int class, int id, int type);
 int dnssec_validate_by_ds(time_t now, struct dns_header *header, size_t plen, char *name,
 			  char *keyname, int class, int *validate_count);
 int dnssec_validate_ds(time_t now, struct dns_header *header, size_t plen, char *name,
@@ -1939,11 +1939,11 @@ void from_wire(char *name);
 /* edns0.c */
 unsigned char *find_pseudoheader(struct dns_header *header, size_t plen,
 				   size_t *len, unsigned char **p, int *is_sign, int *is_last);
-size_t add_pseudoheader(struct dns_header *header, size_t plen, unsigned char *limit, 
+size_t add_pseudoheader(struct dns_header *header, size_t plen, size_t out_size, 
 			int optno, unsigned char *opt, size_t optlen, int set_do, int replace);
-size_t add_do_bit(struct dns_header *header, size_t plen, unsigned char *limit);
+size_t add_do_bit(struct dns_header *header, size_t plen, size_t outlen);
 void edns0_needs_mac(union mysockaddr *addr, time_t now);
-size_t add_edns0_config(struct dns_header *header, size_t plen, unsigned char *limit, 
+size_t add_edns0_config(struct dns_header *header, size_t plen, size_t outlen, 
 			union mysockaddr *source, time_t now, int *cacheable);
 int check_source(struct dns_header *header, size_t plen, unsigned char *pseudoheader, union mysockaddr *peer);
 
