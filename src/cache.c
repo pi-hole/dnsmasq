@@ -1091,10 +1091,12 @@ int cache_recv_insert(time_t now, int fd)
 	if (op == PIPE_OP_KILLED)
 	  my_syslog(LOG_INFO, _("TCP process for DNSSEC validation timed out"));
 	
-	/* There's a tiny chance that the frec may have been freed 
-	   and reused before the TCP process returns. Detect that with
-	   the uid field which is unique modulo 2^32 for each use. */
-	if (uid == forward->uid)
+	/* There's a chance that the frec may have timed-out and been
+	   freed before the TCP process returns, so check that the
+	   frec is still marked in use. Even if it is in use, there's a tiny chance
+	   that the frec may have been freed and _reused_ before the TCP process returns.
+	   Detect that with the uid field which is unique modulo 2^32 for each use. */
+	if (forward->sentto && uid == forward->uid)
 	  {
 	    if (op == PIPE_OP_RESULT)
 	      {
