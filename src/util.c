@@ -692,18 +692,24 @@ int memcmp_masked(unsigned char *a, unsigned char *b, int len, unsigned int mask
   return count;
 }
 
-char *print_mac(char *buff, unsigned char *mac, int len)
+char *print_mac(unsigned char *mac, int len)
 {
-  char *p = buff;
-  int i;
-   
-  if (len == 0)
-    sprintf(p, "<null>");
-  else
-    for (i = 0; i < len; i++)
-      p += sprintf(p, "%.2x%s", mac[i], (i == len - 1) ? "" : ":");
+  static struct iovec buff = { NULL, 0 };
   
-  return buff;
+  /* each byte is two digits plus ':' except that last
+     which is two digits plus terminator. */
+  if (len == 0 || !expand_buf(&buff, len*3))
+    return "<null>";
+  else
+    {
+      char *p =  buff.iov_base;
+      int i;
+
+      for (i = 0; i < len; i++)
+	p += sprintf(p, "%.2x%s", mac[i], (i == len - 1) ? "" : ":");
+    }
+  
+  return buff.iov_base;
 }
 
 /* rc is return from sendto and friends.

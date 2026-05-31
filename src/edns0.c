@@ -277,14 +277,16 @@ void edns0_needs_mac(union mysockaddr *addr, time_t now)
 
 /* OPT_ADD_MAC = MAC is added (if available)
    OPT_ADD_MAC + OPT_STRIP_MAC = MAC is replaced, if not available, it is only removed
-   OPT_STRIP_MAC = MAC is removed */
+   OPT_STRIP_MAC = MAC is removed
+   Handle only six byte MACs. */
 static size_t add_dns_client(struct dns_header *header, size_t plen, size_t outlen,
 			     union mysockaddr *l3, time_t now, int *cacheablep)
 {
   int replace = 0, maclen = 0;
   unsigned char mac[DHCP_CHADDR_MAX];
-  char encode[18]; /* handle 6 byte MACs ONLY */
-
+  char encode[9] = { 0 };
+  char *encoded = encode;
+  
   if ((option_bool(OPT_MAC_B64) || option_bool(OPT_MAC_HEX)) && (maclen = find_mac(l3, mac, 1, now)) == 6)
     {
       if (option_bool(OPT_STRIP_MAC))
@@ -292,7 +294,7 @@ static size_t add_dns_client(struct dns_header *header, size_t plen, size_t outl
        *cacheablep = 0;
     
        if (option_bool(OPT_MAC_HEX))
-	 print_mac(encode, mac, maclen);
+	 encoded = print_mac(mac, maclen);
        else
 	 {
 	   encoder(mac, encode);
@@ -304,7 +306,7 @@ static size_t add_dns_client(struct dns_header *header, size_t plen, size_t outl
     replace = 2;
 
   if (replace != 0 || maclen == 6)
-    plen = add_pseudoheader(header, plen, outlen, EDNS0_OPTION_NOMDEVICEID, (unsigned char *)encode, strlen(encode), 0, replace);
+    plen = add_pseudoheader(header, plen, outlen, EDNS0_OPTION_NOMDEVICEID, (unsigned char *)encoded, strlen(encoded), 0, replace);
 
   return plen;
 }
