@@ -6270,7 +6270,11 @@ void read_opts(int argc, char **argv, char *compile_opts)
 	  
 	  if ((token = strtok(NULL, " \t\n\r")) &&  
 	      (daemon->domain_suffix = canonicalise_opt(token)))
-	    break;
+	    {
+	      /* We don't call get_line_alloc() until it returns false and frees the automatically */
+	      get_line_alloc(NULL, &line, &linesz);
+	      break;
+	    }
 	}
 
       fclose(f);

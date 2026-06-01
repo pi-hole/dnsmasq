@@ -1038,16 +1038,15 @@ void free_real(const char *func, unsigned int line, void *ptr)
 }
 
 /* get lines from f, expand buffer as required. Buffer is freed when
-   EOF reached and we return zero. */
+   EOF reached and we return zero. Buffer also freed if f == NULL. */
 int get_line_alloc(FILE *f, char **buffp, size_t *sizep)
 {
-  int c;
   size_t cnt = 0;
   char *buff = *buffp;
-  
-  while (1) {
-    c = getc(f);
 
+  while (1) {
+    int c = f ? getc(f) : EOF;
+        
     if (cnt == *sizep)
       {
 	void *new;
@@ -1081,6 +1080,8 @@ int get_line_alloc(FILE *f, char **buffp, size_t *sizep)
 	  return 1;
 
 	free(buff);
+	*buffp = NULL;
+	*sizep = 0;
 	return 0;
       }
 	
